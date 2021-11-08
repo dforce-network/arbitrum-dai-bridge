@@ -18,14 +18,16 @@ pragma solidity ^0.6.11;
 import "./L2ITokenGateway.sol";
 import "../l1/L1ITokenGateway.sol";
 import "./L2CrossDomainEnabled.sol";
+import "../library/SafeMath.sol";
 
 interface Mintable {
-  function mint(address usr, uint256 wad) external;
+  function mintMSD(address token, address usr, uint256 wad) external;
 
   function burn(address usr, uint256 wad) external;
 }
 
-contract L2DaiGateway is L2CrossDomainEnabled, L2ITokenGateway {
+contract L2USXGateway is L2CrossDomainEnabled, L2ITokenGateway {
+  using SafeMath for uint256;
   // --- Auth ---
   mapping(address => uint256) public wards;
 
@@ -40,34 +42,38 @@ contract L2DaiGateway is L2CrossDomainEnabled, L2ITokenGateway {
   }
 
   modifier auth() {
-    require(wards[msg.sender] == 1, "L2DaiGateway/not-authorized");
+    require(wards[msg.sender] == 1, "L2USXGateway/not-authorized");
     _;
   }
 
   event Rely(address indexed usr);
   event Deny(address indexed usr);
 
-  address public immutable l1Dai;
-  address public immutable l2Dai;
+  address public immutable l1USX;
+  address public immutable l2USX;
   address public immutable l1Counterpart;
   address public immutable l2Router;
+  address public immutable l2msdController;
   uint256 public isOpen = 1;
+  uint256 public totalMints;
 
   event Closed();
 
   constructor(
     address _l1Counterpart,
     address _l2Router,
-    address _l1Dai,
-    address _l2Dai
+    address _l1USX,
+    address _l2USX,
+    address _l2msdController
   ) public {
     wards[msg.sender] = 1;
     emit Rely(msg.sender);
 
-    l1Dai = _l1Dai;
-    l2Dai = _l2Dai;
+    l1USX = _l1USX;
+    l2USX = _l2USX;
     l1Counterpart = _l1Counterpart;
     l2Router = _l2Router;
+    l2msdController = _l2msdController;
   }
 
   function close() external auth {
@@ -93,13 +99,14 @@ contract L2DaiGateway is L2CrossDomainEnabled, L2ITokenGateway {
     uint256, // gasPriceBid
     bytes calldata data
   ) public override returns (bytes memory res) {
-    require(isOpen == 1, "L2DaiGateway/closed");
-    require(l1Token == l1Dai, "L2DaiGateway/token-not-dai");
+    require(isOpen == 1, "L2USXGateway/closed");
+    require(l1Token == l1USX, "L2USXGateway/token-not-USX");
 
     (address from, bytes memory extraData) = parseOutboundData(data);
-    require(extraData.length == 0, "L2DaiGateway/call-hook-data-not-allowed");
+    require(extraData.length == 0, "L2USXGateway/call-hook-data-not-allowed");
 
-    Mintable(l2Dai).burn(from, amount);
+    Mintable(l2USX).burn(from, amount);
+    totalMints = totalMints.sub(amount);
 
     uint256 id = sendTxToL1(
       from,
@@ -139,19 +146,20 @@ contract L2DaiGateway is L2CrossDomainEnabled, L2ITokenGateway {
     uint256 amount,
     bytes calldata // data -- unsused
   ) external override onlyL1Counterpart(l1Counterpart) {
-    require(l1Token == l1Dai, "L2DaiGateway/token-not-dai");
+    require(l1Token == l1USX, "L2USXGateway/token-not-USX");
 
-    Mintable(l2Dai).mint(to, amount);
+    Mintable(l2msdController).mintMSD(l2USX, to, amount);
+    totalMints = totalMints.add(amount);
 
     emit DepositFinalized(l1Token, from, to, amount);
   }
 
   function calculateL2TokenAddress(address l1Token) external view override returns (address) {
-    if (l1Token != l1Dai) {
+    if (l1Token != l1USX) {
       return address(0);
     }
 
-    return l2Dai;
+    return l2USX;
   }
 
   function parseOutboundData(bytes memory data)
@@ -169,5 +177,9 @@ contract L2DaiGateway is L2CrossDomainEnabled, L2ITokenGateway {
 
   function counterpartGateway() external view override returns (address) {
     return l1Counterpart;
+  }
+
+  function totalMint() external view returns (uint256) {
+      return totalMints;
   }
 }

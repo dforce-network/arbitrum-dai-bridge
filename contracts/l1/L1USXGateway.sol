@@ -27,7 +27,7 @@ interface TokenLike {
   ) external returns (bool success);
 }
 
-contract L1DaiGateway is L1CrossDomainEnabled, L1ITokenGateway {
+contract L1USXGateway is L1CrossDomainEnabled, L1ITokenGateway {
   // --- Auth ---
   mapping(address => uint256) public wards;
 
@@ -42,15 +42,15 @@ contract L1DaiGateway is L1CrossDomainEnabled, L1ITokenGateway {
   }
 
   modifier auth() {
-    require(wards[msg.sender] == 1, "L1DaiGateway/not-authorized");
+    require(wards[msg.sender] == 1, "L1USXGateway/not-authorized");
     _;
   }
 
   event Rely(address indexed usr);
   event Deny(address indexed usr);
 
-  address public immutable l1Dai;
-  address public immutable l2Dai;
+  address public immutable l1USX;
+  address public immutable l2USX;
   address public immutable l1Escrow;
   address public immutable l1Router;
   address public immutable l2Counterpart;
@@ -62,15 +62,15 @@ contract L1DaiGateway is L1CrossDomainEnabled, L1ITokenGateway {
     address _l2Counterpart,
     address _l1Router,
     address _inbox,
-    address _l1Dai,
-    address _l2Dai,
+    address _l1USX,
+    address _l2USX,
     address _l1Escrow
   ) public L1CrossDomainEnabled(_inbox) {
     wards[msg.sender] = 1;
     emit Rely(msg.sender);
 
-    l1Dai = _l1Dai;
-    l2Dai = _l2Dai;
+    l1USX = _l1USX;
+    l2USX = _l2USX;
     l1Escrow = _l1Escrow;
     l1Router = _l1Router;
     l2Counterpart = _l2Counterpart;
@@ -91,8 +91,8 @@ contract L1DaiGateway is L1CrossDomainEnabled, L1ITokenGateway {
     bytes calldata data
   ) external payable override returns (bytes memory) {
     // do not allow initiating new xchain messages if bridge is closed
-    require(isOpen == 1, "L1DaiGateway/closed");
-    require(l1Token == l1Dai, "L1DaiGateway/token-not-dai");
+    require(isOpen == 1, "L1USXGateway/closed");
+    require(l1Token == l1USX, "L1USXGateway/token-not-USX");
 
     // we use nested scope to avoid stack too deep errors
     address from;
@@ -101,7 +101,7 @@ contract L1DaiGateway is L1CrossDomainEnabled, L1ITokenGateway {
     {
       uint256 maxSubmissionCost;
       (from, maxSubmissionCost, extraData) = parseOutboundData(data);
-      require(extraData.length == 0, "L1DaiGateway/call-hook-data-not-allowed");
+      require(extraData.length == 0, "L1USXGateway/call-hook-data-not-allowed");
 
       TokenLike(l1Token).transferFrom(from, l1Escrow, amount);
 
@@ -149,7 +149,7 @@ contract L1DaiGateway is L1CrossDomainEnabled, L1ITokenGateway {
     uint256 amount,
     bytes calldata data
   ) external override onlyL2Counterpart(l2Counterpart) {
-    require(l1Token == l1Dai, "L1DaiGateway/token-not-dai");
+    require(l1Token == l1USX, "L1USXGateway/token-not-USX");
     (uint256 exitNum, ) = abi.decode(data, (uint256, bytes));
 
     TokenLike(l1Token).transferFrom(l1Escrow, to, amount);
@@ -178,11 +178,11 @@ contract L1DaiGateway is L1CrossDomainEnabled, L1ITokenGateway {
   }
 
   function calculateL2TokenAddress(address l1Token) external view override returns (address) {
-    if (l1Token != l1Dai) {
+    if (l1Token != l1USX) {
       return address(0);
     }
 
-    return l2Dai;
+    return l2USX;
   }
 
   function counterpartGateway() external view override returns (address) {
