@@ -18,7 +18,9 @@ pragma solidity ^0.6.11;
 import "./L2ITokenGateway.sol";
 import "../l1/L1ITokenGateway.sol";
 import "./L2CrossDomainEnabled.sol";
-import "../library/SafeMath.sol";
+import "../library/Initializable.sol";
+
+import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 
 interface Mintable {
   function mintMSD(address token, address usr, uint256 wad) external;
@@ -26,8 +28,8 @@ interface Mintable {
   function burn(address usr, uint256 wad) external;
 }
 
-contract L2USXGateway is L2CrossDomainEnabled, L2ITokenGateway {
-  using SafeMath for uint256;
+contract L2USXGateway is Initializable, L2CrossDomainEnabled, L2ITokenGateway {
+  using SafeMathUpgradeable for uint256;
   // --- Auth ---
   mapping(address => uint256) public wards;
 
@@ -49,12 +51,12 @@ contract L2USXGateway is L2CrossDomainEnabled, L2ITokenGateway {
   event Rely(address indexed usr);
   event Deny(address indexed usr);
 
-  address public immutable l1USX;
-  address public immutable l2USX;
-  address public immutable l1Counterpart;
-  address public immutable l2Router;
-  address public immutable l2msdController;
-  uint256 public isOpen = 1;
+  address public l1USX;
+  address public l2USX;
+  address public l1Counterpart;
+  address public l2Router;
+  address public l2msdController;
+  uint256 public isOpen;
   uint256 public totalMints;
 
   event Closed();
@@ -66,6 +68,17 @@ contract L2USXGateway is L2CrossDomainEnabled, L2ITokenGateway {
     address _l2USX,
     address _l2msdController
   ) public {
+    initialize(_l1Counterpart, _l2Router, _l1USX, _l2USX, _l2msdController);
+  }
+
+  function initialize(
+    address _l1Counterpart,
+    address _l2Router,
+    address _l1USX,
+    address _l2USX,
+    address _l2msdController
+  ) public initializer {
+    isOpen = 1;
     wards[msg.sender] = 1;
     emit Rely(msg.sender);
 
@@ -74,6 +87,7 @@ contract L2USXGateway is L2CrossDomainEnabled, L2ITokenGateway {
     l1Counterpart = _l1Counterpart;
     l2Router = _l2Router;
     l2msdController = _l2msdController;
+    totalMints = 0;
   }
 
   function close() external auth {

@@ -18,6 +18,7 @@ pragma solidity ^0.6.11;
 import "./L1ITokenGateway.sol";
 import "../l2/L2ITokenGateway.sol";
 import "./L1CrossDomainEnabled.sol";
+import "../library/Initializable.sol";
 
 interface TokenLike {
   function transferFrom(
@@ -27,7 +28,7 @@ interface TokenLike {
   ) external returns (bool success);
 }
 
-contract L1USXGateway is L1CrossDomainEnabled, L1ITokenGateway {
+contract L1USXGateway is Initializable, L1CrossDomainEnabled, L1ITokenGateway {
   // --- Auth ---
   mapping(address => uint256) public wards;
 
@@ -49,12 +50,12 @@ contract L1USXGateway is L1CrossDomainEnabled, L1ITokenGateway {
   event Rely(address indexed usr);
   event Deny(address indexed usr);
 
-  address public immutable l1USX;
-  address public immutable l2USX;
-  address public immutable l1Escrow;
-  address public immutable l1Router;
-  address public immutable l2Counterpart;
-  uint256 public isOpen = 1;
+  address public l1USX;
+  address public l2USX;
+  address public l1Escrow;
+  address public l1Router;
+  address public l2Counterpart;
+  uint256 public isOpen;
 
   event Closed();
 
@@ -65,7 +66,19 @@ contract L1USXGateway is L1CrossDomainEnabled, L1ITokenGateway {
     address _l1USX,
     address _l2USX,
     address _l1Escrow
-  ) public L1CrossDomainEnabled(_inbox) {
+  ) public {
+    initialize(_l2Counterpart, _l1Router, _inbox, _l1USX, _l2USX, _l1Escrow);
+  }
+
+  function initialize(
+    address _l2Counterpart,
+    address _l1Router,
+    address _inbox,
+    address _l1USX,
+    address _l2USX,
+    address _l1Escrow
+  ) public {
+    isOpen = 1;
     wards[msg.sender] = 1;
     emit Rely(msg.sender);
 
@@ -74,6 +87,8 @@ contract L1USXGateway is L1CrossDomainEnabled, L1ITokenGateway {
     l1Escrow = _l1Escrow;
     l1Router = _l1Router;
     l2Counterpart = _l2Counterpart;
+
+    __CrossDomainEnabled_init(_inbox);
   }
 
   function close() external auth {

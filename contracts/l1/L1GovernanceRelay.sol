@@ -48,11 +48,13 @@ contract L1GovernanceRelay is L1CrossDomainEnabled {
   event Rely(address indexed usr);
   event Deny(address indexed usr);
 
-  constructor(address _inbox, address _l2GovernanceRelay) public L1CrossDomainEnabled(_inbox) {
+  constructor(address _inbox, address _l2GovernanceRelay) public {
     wards[msg.sender] = 1;
     emit Rely(msg.sender);
 
     l2GovernanceRelay = _l2GovernanceRelay;
+
+    __CrossDomainEnabled_init(_inbox);
   }
 
   // Allow contract to receive ether
