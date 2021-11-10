@@ -16,13 +16,18 @@
 pragma solidity ^0.6.11;
 
 import "./L2CrossDomainEnabled.sol";
+import "../library/Initializable.sol";
 
 // Receive xchain message from L1 counterpart and execute given spell
 
-contract L2GovernanceRelay is L2CrossDomainEnabled {
-  address public immutable l1GovernanceRelay;
+contract L2GovernanceRelay is Initializable, L2CrossDomainEnabled {
+  address public l1GovernanceRelay;
 
   constructor(address _l1GovernanceRelay) public {
+    initialize(_l1GovernanceRelay);
+  }
+
+  function initialize(address _l1GovernanceRelay) public {
     l1GovernanceRelay = _l1GovernanceRelay;
   }
 

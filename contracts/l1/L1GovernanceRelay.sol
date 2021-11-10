@@ -19,12 +19,13 @@ import "../arbitrum/IInbox.sol";
 
 import "./L1CrossDomainEnabled.sol";
 import "../l2/L2GovernanceRelay.sol";
+import "../library/Initializable.sol";
 
 // Relay a message from L1 to L2GovernanceRelay
 // Sending L1->L2 message on arbitrum requires ETH balance. That's why this contract can receive ether.
 // Excessive ether can be reclaimed by governance by calling reclaim function.
 
-contract L1GovernanceRelay is L1CrossDomainEnabled {
+contract L1GovernanceRelay is Initializable, L1CrossDomainEnabled {
   // --- Auth ---
   mapping(address => uint256) public wards;
 
@@ -43,12 +44,16 @@ contract L1GovernanceRelay is L1CrossDomainEnabled {
     _;
   }
 
-  address public immutable l2GovernanceRelay;
+  address public l2GovernanceRelay;
 
   event Rely(address indexed usr);
   event Deny(address indexed usr);
 
   constructor(address _inbox, address _l2GovernanceRelay) public {
+    initialize(_inbox, _l2GovernanceRelay);
+  }
+
+  function initialize(address _inbox, address _l2GovernanceRelay) public initializer {
     wards[msg.sender] = 1;
     emit Rely(msg.sender);
 
