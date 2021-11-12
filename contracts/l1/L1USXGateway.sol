@@ -77,7 +77,7 @@ contract L1USXGateway is Initializable, L1CrossDomainEnabled, L1ITokenGateway {
     address _l1USX,
     address _l2USX,
     address _l1Escrow
-  ) public {
+  ) public initializer {
     isOpen = 1;
     wards[msg.sender] = 1;
     emit Rely(msg.sender);

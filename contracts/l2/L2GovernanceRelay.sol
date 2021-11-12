@@ -27,7 +27,7 @@ contract L2GovernanceRelay is Initializable, L2CrossDomainEnabled {
     initialize(_l1GovernanceRelay);
   }
 
-  function initialize(address _l1GovernanceRelay) public {
+  function initialize(address _l1GovernanceRelay) public initializer {
     l1GovernanceRelay = _l1GovernanceRelay;
   }
 
