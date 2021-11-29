@@ -5,8 +5,6 @@ async function main() {
     console.log("Running deployWithEthers script...");
     let tx;
 
-    const from = "0xbA32Bc6396152025608a37005D80E0346aB4740b";
-
     // Mainnet
     const l1USXContractAddress = "0x0a5e677a6a24b2f1a2bf4f3bffc443231d2fdec8";
     const l2USXContractAddress = "0x641441c631e2F909700d2f41FD87F0aA6A6b4EDb";
@@ -18,9 +16,13 @@ async function main() {
     let escrowProxyContractAddress = "";
     let l1USXGatewayImplAddress = "";
     let l1USXGatewayProxyAddress = "";
+    let l2GovernanceRelayAddress = "";
+    let l1GovernanceRelayImplAddress = "";
+    let l1GovernanceRelayProxyAddress = "";
 
     // 'web3Provider' is a remix global variable object
     const signer = new ethers.providers.Web3Provider(web3Provider).getSigner();
+    let from = await signer.getAddress();
 
     // 0. Deploys proxy admin.
     const proxyAdminName = "ProxyAdmin";
@@ -78,15 +80,57 @@ async function main() {
     console.log("Escrow proxy contract address: ", escrowProxyContractAddress);
 
     // 2. Get current nonce to calculate contract address of next deployed contract.
-    const nonce = await signer.getTransactionCount() + 1;
-    console.log("Deployer next nonce is: ", nonce);
-    const addressOfNextDeployedContract = ethers.utils.getContractAddress({ from, nonce });
-    console.log("Next deploy contract address is: ", addressOfNextDeployedContract);
+    // cause will deploy implementation and proxy contract.
+    let nonce = await signer.getTransactionCount() + 1;
+    console.log("Deployer nonce is: ", nonce);
+    let addressOfNextDeployedContract = ethers.utils.getContractAddress({ from, nonce });
+    console.log("Next deploy contract L1 governance relay address is: ", addressOfNextDeployedContract);
+
+    nonce = await signer.getTransactionCount() + 3;
+    console.log("Deployer nonce is: ", nonce);
+    addressOfNextDeployedContract = ethers.utils.getContractAddress({ from, nonce });
+    console.log("Next deploy contract L1 USX gateway address is: ", addressOfNextDeployedContract);
 
     console.log("\nRun another script to deploy contract on the L2\n");
     return;
 
-    // 3.0 Deploys L1 USX gateway implementation contract
+    // 3.0 Deploy L1 governance rely implementation contract.
+    const governanceRelayContractName = "L1GovernanceRelay";
+    const governanceRelayPath = `browser/artifacts/contracts/l1/${governanceRelayContractName}.sol/${governanceRelayContractName}.json`;
+    const governanceRelayMetadata = JSON.parse(
+      await remix.call("fileManager", "getFile", governanceRelayPath)
+    );
+
+    let l1governanceRelayInitArgs = [
+      inboxAddress,
+      l2GovernanceRelayAddress
+    ];
+    if (!l1GovernanceRelayImplAddress) {
+      console.log("U r going to deploy governance relay implementation contract!");
+      // Create an instance of a Contract Factory
+      const governanceRelayImplFactory = new ethers.ContractFactory(governanceRelayMetadata.abi, governanceRelayMetadata.bytecode, signer);
+      const governanceRelayImpl = await governanceRelayImplFactory.deploy(...l1governanceRelayInitArgs);
+      // The contract is NOT deployed yet; we must wait until it is mined
+      await governanceRelayImpl.deployed();
+      l1GovernanceRelayImplAddress = governanceRelayImpl.address;
+    }
+    console.log("Governance relay implementation contract address: ", l1GovernanceRelayImplAddress);
+    const governanceRelayInIface = new ethers.utils.Interface(governanceRelayMetadata.abi);
+
+    // 3.1 Deploys L1 governance rely proxy contract.
+    if (!l1GovernanceRelayProxyAddress) {
+      console.log("Going to deploy governance relay proxy contract!");
+      const governanceRelayInitData = governanceRelayInIface.encodeFunctionData("initialize", [...l1governanceRelayInitArgs]);
+      console.log("initData is: ", governanceRelayInitData);
+
+      const governanceRelayProxyFactory = new ethers.ContractFactory(proxyMetadata.abi, proxyMetadata.bytecode, signer);
+      const governanceRelayProxy = await governanceRelayProxyFactory.deploy(l1GovernanceRelayImplAddress, proxyAdminAddress, governanceRelayInitData);
+      await governanceRelayProxy.deployed();
+      l1GovernanceRelayProxyAddress = governanceRelayProxy.address;
+    }
+    console.log("L1 governance realy proxy contract address: ", l1GovernanceRelayProxyAddress);
+
+    // 4.0 Deploys L1 USX gateway implementation contract
     let l1USXGatewayInitArgs = [
       l2USXGatewayProxyAddress,
       l1RouterAddress,
@@ -112,7 +156,7 @@ async function main() {
     console.log("L1 USX gateway implementation contract address: ", l1USXGatewayImplAddress);
     const l1USXGatewayInIface = new ethers.utils.Interface(l1USXGatewayMetadata.abi);
 
-    // 3.1 Deploys L2 USX gateway proxy contract
+    // 4.1 Deploys L2 USX gateway proxy contract
     if (!l1USXGatewayProxyAddress) {
       console.log("Going to deploy L1 USX gateway proxy contract!");
       const l1USXGatewayInitData = l1USXGatewayInIface.encodeFunctionData("initialize", [...l1USXGatewayInitArgs]);
@@ -124,6 +168,7 @@ async function main() {
       l1USXGatewayProxyAddress = l1USXGatewayProxy.address;
     }
     console.log("L1 USX Gateway proxy contract address: ", l1USXGatewayProxyAddress);
+    return;
 
   } catch (e) {
     console.log(e.message);

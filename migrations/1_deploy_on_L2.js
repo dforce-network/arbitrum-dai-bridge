@@ -15,6 +15,9 @@ async function main() {
     let proxyAdminAddress = "";
     let l2USXGatewayImplAddress = "";
     let l2USXGatewayProxyAddress = "";
+    let l1GovernanceRelayAddress = "";
+    let l2GovernanceRelayImplAddress = "";
+    let l2GovernanceRelayProxyAddress = "";
 
     // 'web3Provider' is a remix global variable object
     const signer = new ethers.providers.Web3Provider(web3Provider).getSigner();
@@ -37,7 +40,42 @@ async function main() {
     }
     console.log("proxy admin contract address: ", proxyAdminAddress);
 
-    // 1.0 Deploys L2 USX gateway implementation contract
+    // 1.0 Deploy L2 governance rely implementation contract.
+    const governanceRelayContractName = "L2GovernanceRelay";
+    const governanceRelayPath = `browser/artifacts/contracts/l2/${governanceRelayContractName}.sol/${governanceRelayContractName}.json`;
+    const governanceRelayMetadata = JSON.parse(
+      await remix.call("fileManager", "getFile", governanceRelayPath)
+    );
+
+    let l2governanceRelayInitArgs = [
+      l1GovernanceRelayAddress
+    ];
+    if (!l2GovernanceRelayImplAddress) {
+      console.log("U r going to deploy governance relay implementation contract!");
+      // Create an instance of a Contract Factory
+      const governanceRelayImplFactory = new ethers.ContractFactory(governanceRelayMetadata.abi, governanceRelayMetadata.bytecode, signer);
+      const governanceRelayImpl = await governanceRelayImplFactory.deploy(...l2governanceRelayInitArgs);
+      // The contract is NOT deployed yet; we must wait until it is mined
+      await governanceRelayImpl.deployed();
+      l2GovernanceRelayImplAddress = governanceRelayImpl.address;
+    }
+    console.log("Governance relay implementation contract address: ", l2GovernanceRelayImplAddress);
+    const governanceRelayInIface = new ethers.utils.Interface(governanceRelayMetadata.abi);
+
+    // 1.1 Deploys L1 governance rely proxy contract.
+    if (!l2GovernanceRelayProxyAddress) {
+      console.log("Going to deploy governance relay proxy contract!");
+      const governanceRelayInitData = governanceRelayInIface.encodeFunctionData("initialize", [...l2governanceRelayInitArgs]);
+      console.log("initData is: ", governanceRelayInitData);
+
+      const governanceRelayProxyFactory = new ethers.ContractFactory(proxyMetadata.abi, proxyMetadata.bytecode, signer);
+      const governanceRelayProxy = await governanceRelayProxyFactory.deploy(l2GovernanceRelayImplAddress, proxyAdminAddress, governanceRelayInitData);
+      await governanceRelayProxy.deployed();
+      l2GovernanceRelayProxyAddress = governanceRelayProxy.address;
+    }
+    console.log("L2 governance realy proxy contract address: ", l2GovernanceRelayProxyAddress);
+
+    // 2.0 Deploys L2 USX gateway implementation contract
     let l2USXGatewayInitArgs = [
       l1USXGatewayProxyAddress,
       l2RouterAddress,
@@ -62,7 +100,7 @@ async function main() {
     console.log("L2 USX gateway implementation contract address: ", l2USXGatewayImplAddress);
     const l2USXGatewayInIface = new ethers.utils.Interface(l2USXGatewayMetadata.abi);
 
-    // 1.1 Deploys L2 USX gateway proxy contract
+    // 2.1 Deploys L2 USX gateway proxy contract
     const proxyName = "TransparentUpgradeableProxy";
     const proxyArtifactsPath = `browser/artifacts/@openzeppelin/contracts/proxy/${proxyName}.sol/${proxyName}.json`;
     const proxyMetadata = JSON.parse(
