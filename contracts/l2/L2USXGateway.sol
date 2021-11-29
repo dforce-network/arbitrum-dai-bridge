@@ -57,7 +57,7 @@ contract L2USXGateway is Initializable, L2CrossDomainEnabled, L2ITokenGateway {
   address public l2Router;
   address public l2msdController;
   uint256 public isOpen;
-  uint256 public totalMints;
+  uint256 public totalMint;
 
   event Closed();
 
@@ -87,7 +87,7 @@ contract L2USXGateway is Initializable, L2CrossDomainEnabled, L2ITokenGateway {
     l1Counterpart = _l1Counterpart;
     l2Router = _l2Router;
     l2msdController = _l2msdController;
-    totalMints = 0;
+    totalMint = 0;
   }
 
   function close() external auth {
@@ -120,7 +120,7 @@ contract L2USXGateway is Initializable, L2CrossDomainEnabled, L2ITokenGateway {
     require(extraData.length == 0, "L2USXGateway/call-hook-data-not-allowed");
 
     Mintable(l2USX).burn(from, amount);
-    totalMints = totalMints.sub(amount);
+    totalMint = totalMint.sub(amount);
 
     uint256 id = sendTxToL1(
       from,
@@ -163,7 +163,7 @@ contract L2USXGateway is Initializable, L2CrossDomainEnabled, L2ITokenGateway {
     require(l1Token == l1USX, "L2USXGateway/token-not-USX");
 
     Mintable(l2msdController).mintMSD(l2USX, to, amount);
-    totalMints = totalMints.add(amount);
+    totalMint = totalMint.add(amount);
 
     emit DepositFinalized(l1Token, from, to, amount);
   }
@@ -191,9 +191,5 @@ contract L2USXGateway is Initializable, L2CrossDomainEnabled, L2ITokenGateway {
 
   function counterpartGateway() external view override returns (address) {
     return l1Counterpart;
-  }
-
-  function totalMint() external view returns (uint256) {
-      return totalMints;
   }
 }
