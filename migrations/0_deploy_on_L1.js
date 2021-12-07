@@ -10,15 +10,15 @@ async function main() {
     const l2USXContractAddress = "0x641441c631e2F909700d2f41FD87F0aA6A6b4EDb";
     const l1RouterAddress = "0x72Ce9c846789fdB6fC1f34aC4AD25Dd9ef7031ef";
     const inboxAddress = "0x4dbd4fc535ac27206064b68ffcf827b0a60bab3f";
-    let l2USXGatewayProxyAddress = "";
-    let proxyAdminAddress = "";
-    let escrowImplContractAddress = "";
-    let escrowProxyContractAddress = "";
-    let l1USXGatewayImplAddress = "";
-    let l1USXGatewayProxyAddress = "";
-    let l2GovernanceRelayAddress = "";
-    let l1GovernanceRelayImplAddress = "";
-    let l1GovernanceRelayProxyAddress = "";
+    let l2USXGatewayProxyAddress = "0x1C4d5eCFBf2AF57251f20a524D0f0c1b4f6ED1C9";
+    let proxyAdminAddress = "0x4FF0455bcfBB5886607c078E0F43Efb5DE34DeF4";
+    let escrowImplContractAddress = "0xA2c3996a9DbAFD5B23f5f8f5aa6CAC1B9c346059";
+    let escrowProxyContractAddress = "0x9E8B68E17441413b26C2f18e741EAba69894767c";
+    let l1USXGatewayImplAddress = "0x7D25d250fBd63b0daC4A38c661075930c9a87AEa";
+    let l1USXGatewayProxyAddress = "0x870ac6a76A30742800609F205c741E86Db9b71a2";
+    let l2GovernanceRelayAddress = "0xdEAD000000000000000042069420694206942069";
+    let l1GovernanceRelayImplAddress = "0xdEAD000000000000000042069420694206942069";
+    let l1GovernanceRelayProxyAddress = "0xdEAD000000000000000042069420694206942069";
 
     // 'web3Provider' is a remix global variable object
     const signer = new ethers.providers.Web3Provider(web3Provider).getSigner();
@@ -92,7 +92,7 @@ async function main() {
     console.log("Next deploy contract L1 USX gateway address is: ", addressOfNextDeployedContract);
 
     console.log("\nRun another script to deploy contract on the L2\n");
-    return;
+    // return;
 
     // 3.0 Deploy L1 governance rely implementation contract.
     const governanceRelayContractName = "L1GovernanceRelay";
@@ -156,7 +156,7 @@ async function main() {
     console.log("L1 USX gateway implementation contract address: ", l1USXGatewayImplAddress);
     const l1USXGatewayInIface = new ethers.utils.Interface(l1USXGatewayMetadata.abi);
 
-    // 4.1 Deploys L2 USX gateway proxy contract
+    // 4.1 Deploys L1 USX gateway proxy contract
     if (!l1USXGatewayProxyAddress) {
       console.log("Going to deploy L1 USX gateway proxy contract!");
       const l1USXGatewayInitData = l1USXGatewayInIface.encodeFunctionData("initialize", [...l1USXGatewayInitArgs]);

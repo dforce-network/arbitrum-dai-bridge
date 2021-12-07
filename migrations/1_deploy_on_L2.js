@@ -11,13 +11,13 @@ async function main() {
     const l2USXContractAddress = "0x641441c631e2F909700d2f41FD87F0aA6A6b4EDb";
     const l2msdControllerAddress = "0x38a5585d347E8DFc3965C1914498EAfbDeD7c5Ff";
     const l2RouterAddress = "0x5288c571Fd7aD117beA99bF60FE0846C4E84F933";
-    let l1USXGatewayProxyAddress = "";
-    let proxyAdminAddress = "";
-    let l2USXGatewayImplAddress = "";
-    let l2USXGatewayProxyAddress = "";
-    let l1GovernanceRelayAddress = "";
-    let l2GovernanceRelayImplAddress = "";
-    let l2GovernanceRelayProxyAddress = "";
+    let l1USXGatewayProxyAddress = "0x870ac6a76A30742800609F205c741E86Db9b71a2";
+    let proxyAdminAddress = "0xc9aa79F70ac4a11619c649e857D74F517bBFeE47";
+    let l2USXGatewayImplAddress = "0x7e2Dc2b896b7AAc98D6ee8e954d3f5bDCC90076b";
+    let l2USXGatewayProxyAddress = "0x1C4d5eCFBf2AF57251f20a524D0f0c1b4f6ED1C9";
+    let l1GovernanceRelayAddress = "0xdEAD000000000000000042069420694206942069";
+    let l2GovernanceRelayImplAddress = "0xdEAD000000000000000042069420694206942069";
+    let l2GovernanceRelayProxyAddress = "0xdEAD000000000000000042069420694206942069";
 
     // 'web3Provider' is a remix global variable object
     const signer = new ethers.providers.Web3Provider(web3Provider).getSigner();
@@ -63,6 +63,12 @@ async function main() {
     const governanceRelayInIface = new ethers.utils.Interface(governanceRelayMetadata.abi);
 
     // 1.1 Deploys L1 governance rely proxy contract.
+    const proxyName = "TransparentUpgradeableProxy";
+    const proxyArtifactsPath = `browser/artifacts/@openzeppelin/contracts/proxy/${proxyName}.sol/${proxyName}.json`;
+    const proxyMetadata = JSON.parse(
+      await remix.call("fileManager", "getFile", proxyArtifactsPath)
+    );
+
     if (!l2GovernanceRelayProxyAddress) {
       console.log("Going to deploy governance relay proxy contract!");
       const governanceRelayInitData = governanceRelayInIface.encodeFunctionData("initialize", [...l2governanceRelayInitArgs]);
@@ -101,12 +107,6 @@ async function main() {
     const l2USXGatewayInIface = new ethers.utils.Interface(l2USXGatewayMetadata.abi);
 
     // 2.1 Deploys L2 USX gateway proxy contract
-    const proxyName = "TransparentUpgradeableProxy";
-    const proxyArtifactsPath = `browser/artifacts/@openzeppelin/contracts/proxy/${proxyName}.sol/${proxyName}.json`;
-    const proxyMetadata = JSON.parse(
-      await remix.call("fileManager", "getFile", proxyArtifactsPath)
-    );
-
     if (!l2USXGatewayProxyAddress) {
       console.log("Going to deploy L2 USX gateway proxy contract!");
       const l2USXGatewayInitData = l2USXGatewayInIface.encodeFunctionData("initialize", [...l2USXGatewayInitArgs]);
