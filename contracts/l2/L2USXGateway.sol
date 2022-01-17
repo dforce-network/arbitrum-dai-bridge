@@ -28,6 +28,10 @@ interface Mintable {
   function burn(address usr, uint256 wad) external;
 }
 
+interface Ioperator {
+  function execute(bytes memory data) external;
+}
+
 contract L2USXGateway is Initializable, L2CrossDomainEnabled, L2ITokenGateway {
   using SafeMathUpgradeable for uint256;
   // --- Auth ---
@@ -153,12 +157,14 @@ contract L2USXGateway is Initializable, L2CrossDomainEnabled, L2ITokenGateway {
     return outboundCalldata;
   }
 
+  event Length(bytes data, uint256 dataLength);
+
   function finalizeInboundTransfer(
     address l1Token,
     address from,
     address to,
     uint256 amount,
-    bytes calldata // data -- unsused
+    bytes calldata data
   ) external override onlyL1Counterpart(l1Counterpart) {
     require(l1Token == l1USX, "L2USXGateway/token-not-USX");
 
@@ -166,6 +172,12 @@ contract L2USXGateway is Initializable, L2CrossDomainEnabled, L2ITokenGateway {
     totalMint = totalMint.add(amount);
 
     emit DepositFinalized(l1Token, from, to, amount);
+
+    (bytes memory emptyData, bytes memory actualData) = abi.decode(data, (bytes, bytes));
+    if (actualData.length > 32) {
+      Ioperator(to).execute(actualData);
+      emit Length(actualData, actualData.length);
+    }
   }
 
   function calculateL2TokenAddress(address l1Token) external view override returns (address) {

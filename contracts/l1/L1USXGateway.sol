@@ -116,7 +116,7 @@ contract L1USXGateway is Initializable, L1CrossDomainEnabled, L1ITokenGateway {
     {
       uint256 maxSubmissionCost;
       (from, maxSubmissionCost, extraData) = parseOutboundData(data);
-      require(extraData.length == 0, "L1USXGateway/call-hook-data-not-allowed");
+      // require(extraData.length == 0, "L1USXGateway/call-hook-data-not-allowed");
 
       TokenLike(l1Token).transferFrom(from, l1Escrow, amount);
 
