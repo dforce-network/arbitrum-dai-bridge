@@ -28,8 +28,8 @@ interface Mintable {
   function burn(address usr, uint256 wad) external;
 }
 
-interface Ioperator {
-  function execute(bytes memory data) external;
+interface IOperator {
+  function executeStrategy(bytes memory data) external;
 }
 
 contract L2USXGateway is Initializable, L2CrossDomainEnabled, L2ITokenGateway {
@@ -175,7 +175,7 @@ contract L2USXGateway is Initializable, L2CrossDomainEnabled, L2ITokenGateway {
 
     (bytes memory emptyData, bytes memory actualData) = abi.decode(data, (bytes, bytes));
     if (actualData.length > 32) {
-      Ioperator(to).execute(actualData);
+      IOperator(to).executeStrategy(actualData);
       emit Length(actualData, actualData.length);
     }
   }
