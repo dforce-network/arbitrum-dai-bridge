@@ -554,10 +554,11 @@ const l1GovernanceRelay = '0x2E76D200C6CbC8587090b4Ac8f4D0cB6d2F2188c'
 const l2GovernanceRelay = '0xF76eAd4da04BbeB97d29F83e2Ec3a621d0FB3c6e'
 const abiCoder = new ethers.utils.AbiCoder()
 const provider = ethers.getDefaultProvider('https://rinkeby.infura.io/v3/5b56b37c7e9844f7b58373cac2fafa1d')
-const from = '0xae23214a5F188F5d3acF19B969BB386Ca5ca9335'
-const to = '0xeB54706fc267B5dF368188bFa1Cd4D3761E6A4Af' // operator
-const depositAmount = ethers.utils.parseEther('1220000')
-const funcName = 'mint'
+const from = '0xF9BA268e7f8f6bef80a6c74f916295e1cB50485d' // L1Operator
+const to = '0x517237123bd7aFe8FC0e8a3a7F03a59511A910cF'   // L2Operator
+const depositAmount = ethers.utils.parseEther('1000')
+// const funcName = 'mint'
+const funcName = 'addLiquidity'
 // const funcName = 'addLiquidity'
 const funcArgs = [depositAmount]
 
