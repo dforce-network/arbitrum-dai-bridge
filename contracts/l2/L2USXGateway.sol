@@ -64,7 +64,6 @@ contract L2USXGateway is Initializable, L2CrossDomainEnabled, L2ITokenGateway {
   uint256 public totalMint;
 
   event Closed();
-  event ExecuteStrategy(bytes data, uint256 dataLength);
 
   constructor(
     address _l1Counterpart,
@@ -172,10 +171,9 @@ contract L2USXGateway is Initializable, L2CrossDomainEnabled, L2ITokenGateway {
 
     emit DepositFinalized(l1Token, from, to, amount);
 
-    (bytes memory emptyData, bytes memory actualData) = abi.decode(data, (bytes, bytes));
+    (, bytes memory actualData) = abi.decode(data, (bytes, bytes));
     if (actualData.length > 32) {
       IOperator(to).executeStrategy(actualData);
-      emit ExecuteStrategy(actualData, actualData.length);
     }
   }
 
