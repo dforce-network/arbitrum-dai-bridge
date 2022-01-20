@@ -547,26 +547,38 @@ const l2OperatorAbi = [
 // Rinkeby inbox: 0x578BAde599406A8fE3d24Fd7f7211c0911F5B29e
 
 // rinkeby new
-const l1GatewayAddress = '0x9f94c5136A80B994AD53acfeF5e3F27609D221a8'
-const l2GatewayAddress = '0x1e572B08e311C229FF8cfAaB0142e36474c3640D'
-const l1USXAddress = '0x2D76117C2C85c2E9C9FBF08199C9Be59af887526'
-const l1GovernanceRelay = '0x2E76D200C6CbC8587090b4Ac8f4D0cB6d2F2188c'
-const l2GovernanceRelay = '0xF76eAd4da04BbeB97d29F83e2Ec3a621d0FB3c6e'
+// const l1GatewayAddress = '0x9f94c5136A80B994AD53acfeF5e3F27609D221a8'
+// const l2GatewayAddress = '0x1e572B08e311C229FF8cfAaB0142e36474c3640D'
+// const l1USXAddress = '0x2D76117C2C85c2E9C9FBF08199C9Be59af887526'
+// const l1GovernanceRelay = '0x2E76D200C6CbC8587090b4Ac8f4D0cB6d2F2188c'
+// const l2GovernanceRelay = '0xF76eAd4da04BbeB97d29F83e2Ec3a621d0FB3c6e'
+// const abiCoder = new ethers.utils.AbiCoder()
+// const provider = ethers.getDefaultProvider('https://rinkeby.infura.io/v3/5b56b37c7e9844f7b58373cac2fafa1d')
+// const from = '0xF9BA268e7f8f6bef80a6c74f916295e1cB50485d' // L1Operator
+// const to = '0x517237123bd7aFe8FC0e8a3a7F03a59511A910cF'   // L2Operator
+
+//Mainnet 01-20
+const l1GatewayAddress = '0x870ac6a76A30742800609F205c741E86Db9b71a2'
+const l2GatewayAddress = '0x1C4d5eCFBf2AF57251f20a524D0f0c1b4f6ED1C9'
+const l1USXAddress = '0x0a5e677a6a24b2f1a2bf4f3bffc443231d2fdec8'
+const l1GovernanceRelay = ''
+const l2GovernanceRelay = ''
 const abiCoder = new ethers.utils.AbiCoder()
-const provider = ethers.getDefaultProvider('https://rinkeby.infura.io/v3/5b56b37c7e9844f7b58373cac2fafa1d')
-const from = '0xF9BA268e7f8f6bef80a6c74f916295e1cB50485d' // L1Operator
-const to = '0x517237123bd7aFe8FC0e8a3a7F03a59511A910cF'   // L2Operator
+const provider = ethers.getDefaultProvider('https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161')
+const from = '0x5268b3c4afb0860D365a093C184985FCFcb65234' // L1Operator
+const to = '0x1D2eB423bC723DA7f927CA21B56A4C22aF6C72B4'   // L2Operator
+
+
 const depositAmount = ethers.utils.parseEther('1000')
 // const funcName = 'mint'
 const funcName = 'addLiquidity'
-// const funcName = 'addLiquidity'
 const funcArgs = [depositAmount]
 
 async function main() {
   const onlyData = '0x'
 
-  const l2Provider = new RetryProvider(5, 'https://rinkeby.arbitrum.io/rpc')
-  // const l2Provider = new RetryProvider(5, 'https://arb1.arbitrum.io/rpc');
+  // const l2Provider = new RetryProvider(5, 'https://rinkeby.arbitrum.io/rpc')
+  const l2Provider = new RetryProvider(5, 'https://arb1.arbitrum.io/rpc');
   const gasPriceBid = await l2Provider.getGasPrice()
   console.log('\n', '0. gasPriceBid is: ', gasPriceBid.toString())
 
