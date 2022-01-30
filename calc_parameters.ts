@@ -509,6 +509,19 @@ const l1GatewayABI = [
 ]
 
 const l2OperatorAbi = [
+    {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: '_amount',
+        type: 'uint256',
+      },
+    ],
+    name: 'doNotCall',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
   {
     inputs: [
       {
@@ -568,10 +581,10 @@ const provider = ethers.getDefaultProvider('https://mainnet.infura.io/v3/9aa3d95
 const from = '0x5268b3c4afb0860D365a093C184985FCFcb65234' // L1Operator
 const to = '0x1D2eB423bC723DA7f927CA21B56A4C22aF6C72B4'   // L2Operator
 
-
-const depositAmount = ethers.utils.parseEther('1000')
+const depositAmount = ethers.utils.parseEther('5000000')
 // const funcName = 'mint'
-const funcName = 'addLiquidity'
+// const funcName = 'addLiquidity'
+const funcName = 'doNotCall'
 const funcArgs = [depositAmount]
 
 async function main() {
@@ -599,15 +612,19 @@ async function main() {
   )
 
   console.log('\n', '1. maxGas', maxGas.toString())
-  // console.log("\n", "1.1 maxGas1", maxGas1.toString());
 
   const iface = new ethers.utils.Interface(l2OperatorAbi)
   const calldata = iface.encodeFunctionData(funcName, funcArgs)
   const L2TxData = abiCoder.encode(['address', 'bytes'], [to, calldata])
   console.log('L2TxData', L2TxData.toString())
 
-  const defaultData = abiCoder.encode(['uint256', 'bytes'], [maxSubmissionPrice, L2TxData])
-  console.log('\n', '2. defaultData', defaultData)
+  if (funcName == 'doNotCall') {
+    const defaultData = abiCoder.encode(['uint256', 'bytes'], [maxSubmissionPrice, onlyData])
+    console.log('\n', '2. defaultData', defaultData)
+  } else {
+    const defaultData = abiCoder.encode(['uint256', 'bytes'], [maxSubmissionPrice, L2TxData])
+    console.log('\n', '2. defaultData', defaultData)
+  }
 
   const ethValue = await maxSubmissionPrice.add(gasPriceBid.mul(maxGas))
   console.log('\n', '3. ethValue', ethValue.toString())
