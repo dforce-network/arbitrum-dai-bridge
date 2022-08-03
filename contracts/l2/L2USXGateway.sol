@@ -166,8 +166,8 @@ contract L2USXGateway is Initializable, L2CrossDomainEnabled, L2ITokenGateway {
   ) external override onlyL1Counterpart(l1Counterpart) {
     require(l1Token == l1USX, "L2USXGateway/token-not-USX");
 
-    Mintable(l2msdController).mintMSD(l2USX, to, amount);
     totalMint = totalMint.add(amount);
+    Mintable(l2msdController).mintMSD(l2USX, to, amount);
 
     emit DepositFinalized(l1Token, from, to, amount);
 
