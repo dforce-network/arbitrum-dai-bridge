@@ -123,8 +123,8 @@ contract L2USXGateway is Initializable, L2CrossDomainEnabled, L2ITokenGateway {
     (address from, bytes memory extraData) = parseOutboundData(data);
     require(extraData.length == 0, "L2USXGateway/call-hook-data-not-allowed");
 
-    Mintable(l2USX).burn(from, amount);
     totalMint = totalMint.sub(amount);
+    Mintable(l2USX).burn(from, amount);
 
     uint256 id = sendTxToL1(
       from,
